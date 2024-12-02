@@ -91,10 +91,9 @@ def configStringPath = ExoplayerDependencies
         .concat("buildFromSource:$media3_buildFromSource")
         .md5()
 
-// commented as new architecture not yet fully supported
-// if (isNewArchitectureEnabled()) {
-//     apply plugin: "com.facebook.react"
-// }
+if (isNewArchitectureEnabled()) {
+    apply plugin: "com.facebook.react"
+}
 
 android {
     if (supportsNamespace()) {
@@ -135,8 +134,21 @@ android {
         buildConfigField "boolean", "USE_EXOPLAYER_HLS", ExoplayerDependencies["useExoplayerHls"].toString()
         buildConfigField "boolean", "USE_EXOPLAYER_RTSP", ExoplayerDependencies["useExoplayerRtsp"].toString()
 
+
+        // Add this line to include the DEBUG field
+        buildConfigField "boolean", "DEBUG", String.valueOf(Boolean.parseBoolean(project.hasProperty('DEBUG') ? project.DEBUG : "false"))
+
         ndk {
             abiFilters(*reactNativeArchitectures())
+        }
+    }
+
+    buildTypes {
+        debug {
+            buildConfigField "boolean", "DEBUG", "true"
+        }
+        release {
+            buildConfigField "boolean", "DEBUG", "false"
         }
     }
 

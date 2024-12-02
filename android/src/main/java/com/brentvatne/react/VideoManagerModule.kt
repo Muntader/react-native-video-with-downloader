@@ -79,6 +79,7 @@ class VideoManagerModule(reactContext: ReactApplicationContext?) : ReactContextB
         }
     }
 
+
     companion object {
         private const val REACT_CLASS = "VideoManager"
     }

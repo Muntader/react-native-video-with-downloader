@@ -2,6 +2,7 @@ package com.brentvatne.exoplayer
 
 import android.graphics.Color
 import android.util.Log
+import com.brentvatne.common.api.BufferConfig
 import com.brentvatne.common.api.BufferingStrategy
 import com.brentvatne.common.api.ControlsConfig
 import com.brentvatne.common.api.ResizeMode
@@ -35,6 +36,7 @@ class ReactExoplayerViewManager(private val config: ReactExoplayerConfig) : View
         private const val PROP_MUTED = "muted"
         private const val PROP_AUDIO_OUTPUT = "audioOutput"
         private const val PROP_VOLUME = "volume"
+        private const val PROP_BUFFER_CONFIG = "bufferConfig"
         private const val PROP_PREVENTS_DISPLAY_SLEEP_DURING_VIDEO_PLAYBACK =
             "preventsDisplaySleepDuringVideoPlayback"
         private const val PROP_PROGRESS_UPDATE_INTERVAL = "progressUpdateInterval"
@@ -238,6 +240,12 @@ class ReactExoplayerViewManager(private val config: ReactExoplayerConfig) : View
     @ReactProp(name = PROP_SHUTTER_COLOR, defaultInt = Color.BLACK)
     fun setShutterColor(videoView: ReactExoplayerView, color: Int) {
         videoView.setShutterColor(color)
+    }
+
+    @ReactProp(name = PROP_BUFFER_CONFIG)
+    fun setBufferConfig(videoView: ReactExoplayerView, bufferConfig: ReadableMap?) {
+        val config = BufferConfig.parse(bufferConfig)
+        videoView.setBufferConfig(config)
     }
 
     @ReactProp(name = PROP_SHOW_NOTIFICATION_CONTROLS)

@@ -4,7 +4,10 @@ import type {
   Float,
   UnsafeObject,
 } from 'react-native/Libraries/Types/CodegenTypes';
-import type {VideoSaveData} from '../types/video-ref';
+
+export type VideoSaveData = {
+  uri: string;
+};
 
 // @TODO rename to "Spec" when applying new arch
 export interface VideoManagerType {

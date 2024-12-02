@@ -1,5 +1,8 @@
 import Video from './Video';
-export {VideoDecoderProperties} from './VideoDecoderProperties';
+import VideoDownloader from './VideoDownloader';
+
+export { VideoDecoderProperties } from './VideoDecoderProperties';
 export * from './types';
-export {Video};
+export type { VideoRef } from './Video';
+export { Video, VideoDownloader }; // Export both
 export default Video;
