@@ -142,6 +142,10 @@ type SubtitleStyle = Readonly<{
   paddingRight?: WithDefault<Float, 0>;
   opacity?: WithDefault<Float, 1>;
   subtitlesFollowVideo?: WithDefault<boolean, true>;
+  fontType?: WithDefault<'sans' | 'mono' | 'serif', 'sans'>;
+  fontColor?: WithDefault<string, '#FFFFFF'>;
+  backgroundColor?: WithDefault<string, 'transparent'>;
+  edgeType?: WithDefault<'none' | 'outline' | 'drop_shadow' | 'raised' | 'depressed', 'depressed'>;
 }>;
 
 type OnLoadData = Readonly<{

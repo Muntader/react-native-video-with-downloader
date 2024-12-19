@@ -180,6 +180,10 @@ export type SubtitleStyle = {
   paddingRight?: number;
   opacity?: number;
   subtitlesFollowVideo?: boolean;
+  fontType?: 'sans' | 'mono' | 'serif';
+  fontColor?: string;
+  backgroundColor?: string;
+  edgeType?: 'none' | 'outline' | 'drop_shadow' | 'raised' | 'depressed';
 };
 
 export enum TextTrackType {

@@ -10,8 +10,8 @@ import android.net.NetworkInfo
 import android.net.Uri
 import android.os.Build
 import android.util.Log
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaItem.DrmConfiguration
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.Util
 import androidx.media3.exoplayer.offline.Download
@@ -54,7 +54,6 @@ class VideoDownloaderModule(reactContext: ReactApplicationContext) :
     init {
         AxOfflineManager.getInstance().init(reactContext)
     }
-
 
     @ReactMethod
     fun startDownload(url: String, title: String, drm: ReadableMap?, promise: Promise) {
@@ -127,7 +126,7 @@ class VideoDownloaderModule(reactContext: ReactApplicationContext) :
         }
     }
 
-
+    @ReactMethod
     fun removeAllDownloads(promise: Promise) {
         try {
             ensureOfflineManagerInitialized()
@@ -214,9 +213,68 @@ class VideoDownloaderModule(reactContext: ReactApplicationContext) :
     }
 
     private fun getTracks(): Array<IntArray> {
-        // Logic to get tracks
-        return arrayOf() // Adjust logic as needed
+        val tracks = ArrayList<IntArray>()
+
+        for (period in 0 until mDownloadHelper!!.periodCount) {
+            val mappedTrackInfo = mDownloadHelper!!.getMappedTrackInfo(period)
+
+            for (renderer in 0 until mappedTrackInfo.rendererCount) {
+                val trackType = mappedTrackInfo.getRendererType(renderer)
+                val trackGroupArray = mappedTrackInfo.getTrackGroups(renderer)
+
+                // Handle video tracks
+                if (trackType == C.TRACK_TYPE_VIDEO) {
+                    var selectedVideoTrackIndexes: IntArray? = null
+                    var bestResolution = Int.MAX_VALUE // Start with maximum possible resolution
+                    for (group in 0 until trackGroupArray.length) {
+                        val trackGroup = trackGroupArray[group]
+                        for (track in 0 until trackGroup.length) {
+                            val format = trackGroup.getFormat(track)
+                            if (format.height <= 720 && format.height < bestResolution) {
+                                bestResolution = format.height
+                                selectedVideoTrackIndexes = intArrayOf(period, renderer, group, track)
+                            }
+                        }
+                    }
+                    if (selectedVideoTrackIndexes != null) {
+                        tracks.add(selectedVideoTrackIndexes)
+                    }
+                }
+
+                // Handle audio tracks
+                if (trackType == C.TRACK_TYPE_AUDIO) {
+                    for (group in 0 until trackGroupArray.length) {
+                        val trackGroup = trackGroupArray[group]
+                        for (track in 0 until trackGroup.length) {
+                            tracks.add(intArrayOf(period, renderer, group, track))
+                        }
+                    }
+                }
+
+                // Handle subtitle tracks
+                if (trackType == C.TRACK_TYPE_TEXT) {
+                    for (group in 0 until trackGroupArray.length) {
+                        val trackGroup = trackGroupArray[group]
+                        for (track in 0 until trackGroup.length) {
+                            tracks.add(intArrayOf(period, renderer, group, track))
+                        }
+                    }
+                }
+            }
+        }
+
+        val tracksToDownload = Array(tracks.size) { IntArray(1) }
+        for (i in tracks.indices) {
+            tracksToDownload[i] = tracks[i]
+        }
+
+        for (row in tracksToDownload) {
+            Log.d(TAG, "Tracks to download: " + row.contentToString())
+        }
+
+        return tracksToDownload
     }
+
 
     private fun onRemoveAllLicenses() {
         mLicenseManager.releaseAllLicenses()

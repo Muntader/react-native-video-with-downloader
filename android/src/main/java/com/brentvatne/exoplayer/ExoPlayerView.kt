@@ -1,6 +1,8 @@
 package com.brentvatne.exoplayer
 
 import android.content.Context
+import android.graphics.Color
+import android.graphics.Typeface
 import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
@@ -19,6 +21,7 @@ import androidx.media3.common.text.Cue
 import androidx.media3.common.util.Assertions
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.SubtitleView
 import com.brentvatne.common.api.ResizeMode
 import com.brentvatne.common.api.SubtitleStyle
@@ -114,27 +117,65 @@ class ExoPlayerView(private val context: Context) :
     }
 
     fun setSubtitleStyle(style: SubtitleStyle) {
-        // ensure we reset subtitle style before reapplying it
+        // Ensure we reset subtitle style before reapplying it
         subtitleLayout.setUserDefaultStyle()
         subtitleLayout.setUserDefaultTextSize()
+        subtitleLayout.setApplyEmbeddedStyles(false)
 
+        // Set font size if provided
         if (style.fontSize > 0) {
             subtitleLayout.setFixedTextSize(TypedValue.COMPLEX_UNIT_SP, style.fontSize.toFloat())
         }
+
+        // Set padding
         subtitleLayout.setPadding(
             style.paddingLeft,
             style.paddingTop,
-            style.paddingTop,
+            style.paddingRight,
             style.paddingBottom
         )
+
+        // Handle opacity
         if (style.opacity != 0.0f) {
             subtitleLayout.alpha = style.opacity
             subtitleLayout.visibility = View.VISIBLE
         } else {
             subtitleLayout.visibility = View.GONE
         }
+
+        // Determine text and background colors
+        val foregroundColor = parseColorOrDefault(style.fontColor, Color.WHITE)
+        val backgroundColor = parseColorOrDefault(style.backgroundColor, Color.TRANSPARENT)
+        val windowColor = Color.TRANSPARENT
+
+
+        // Determine font type
+        val typeface = when (style.fontType) {
+            "mono" -> Typeface.MONOSPACE
+            "serif" -> Typeface.SERIF
+            else -> Typeface.SANS_SERIF // Default to "sans"
+        }
+        val weightedTypeface = Typeface.create(typeface, Typeface.BOLD)
+
+        // Map and apply edge type
+        val edgeType = mapEdgeType(style.edgeType)
+        val edgeColor = Color.BLACK // Default shadow color for contrast
+
+        // Create a CaptionStyleCompat with the specified parameters
+        val captionStyle = CaptionStyleCompat(
+            foregroundColor,
+            backgroundColor,
+            windowColor,
+            edgeType,
+            edgeColor,
+            weightedTypeface,
+        )
+
+        // Apply the caption style to the SubtitleView
+        subtitleLayout.setStyle(captionStyle)
+
+        // Manage subtitle follow video behavior
         if (localStyle.subtitlesFollowVideo != style.subtitlesFollowVideo) {
-            // No need to manipulate layout if value didn't change
             if (style.subtitlesFollowVideo) {
                 removeViewInLayout(subtitleLayout)
                 layout.addView(subtitleLayout, layoutParams)
@@ -144,8 +185,29 @@ class ExoPlayerView(private val context: Context) :
             }
             requestLayout()
         }
+
+        // Update the local style
         localStyle = style
     }
+
+    private fun mapEdgeType(edgeType: String?): Int {
+        return when (edgeType?.lowercase()) {
+            "outline" -> CaptionStyleCompat.EDGE_TYPE_OUTLINE
+            "drop_shadow" -> CaptionStyleCompat.EDGE_TYPE_DROP_SHADOW
+            "raised" -> CaptionStyleCompat.EDGE_TYPE_RAISED
+            "depressed" -> CaptionStyleCompat.EDGE_TYPE_DEPRESSED
+            else -> CaptionStyleCompat.EDGE_TYPE_NONE // Default to none
+        }
+    }
+
+    private fun parseColorOrDefault(color: String?, defaultColor: Int): Int {
+        return try {
+            color?.let { Color.parseColor(it) } ?: defaultColor
+        } catch (e: IllegalArgumentException) {
+            defaultColor
+        }
+    }
+
 
     fun setShutterColor(color: Int) {
         shutterView.setBackgroundColor(color)
